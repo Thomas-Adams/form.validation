@@ -1,0 +1,11 @@
+doctype html
+html(ng-app='formApp')
+    head
+        title= title
+        link(rel='stylesheet', href='/_common/css/styles.css')
+        script(src='/_common/js/vendor/jquery/dist/jquery.js')
+        script(src='/_common/js/vendor/bootstrap.js')
+        script(src='/_common/js/vendor/angular/angular.js')
+        script(src='/_common/js/lib/formApp.js')
+    body(ng-controller='FormController')
+        block content

@@ -1,0 +1,115 @@
+extends layout
+
+block content
+    .container-fluid
+        .row
+            .col-lg-1
+            .col-lg-3
+                .row
+                    form.form-horizontal(name='addFieldForm', id='addFieldForm')
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='fieldLabel') Name
+                            .col-sm-9
+                                input.form-control(type='text', required='required', name='fieldLabel', id='fieldLabel', ng-model='field.label')                    
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='fieldName') Name
+                            .col-sm-9
+                                input.form-control(type='text', required='required', name='fieldName', id='fieldName', ng-model='field.name')
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='fieldType') Type
+                            .col-sm-9
+                                select.form-control(id='fieldType', name='fieldType',ng-model='selectedFieldtype', ng-change='changeType()')
+                                    option(value='')
+                                        | Please select
+                                    option(ng-repeat='type in fieldTypes', value='{{type.tagName + "." + (type.type || type.multiple)}}')
+                                        |  {{ type.name }}
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='fieldFormat') Format
+                            .col-sm-9
+                                input.form-control(name='fieldFormat', id='fieldFormat',type='text', ng-model='field.format')
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='maxlength') Max. length
+                            .col-sm-9
+                                input.form-control(type='number',id='maxlength',name='maxlength', ng-model='field.maxlength')
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='minlength') Min. length
+                            .col-sm-9
+                                input.form-control(type='number',id='minlength',name='minlength', ng-model='field.minlength')                                
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='max') Max. value
+                            .col-sm-9
+                                input.form-control(type='number',id='max',name='max',, ng-model='field.max')
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='min') Min. value
+                            .col-sm-9
+                                input.form-control(type='number',id='min',name='min', , ng-model='field.min')
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='step') Step value
+                            .col-sm-9
+                                input.form-control(type='number',id='step',name='step', , ng-model='field.step')                     
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='pattern') Pattern
+                            .col-sm-9
+                                input.form-control(type='text',id='pattern',name='pattern', , ng-model='field.pattern')                                 
+                        .form-group
+                            .col-sm-3
+                            .col-sm-9 
+                                .checkbox
+                                    label.control-label(for='required')
+                                        input(type='checkbox',id='required',name='required', ng-model='field.required')
+                                        |  Field required
+                        .form-group
+                            .col-sm-3
+                                label.control-label(for='clazzName') Class(es)
+                            .col-sm-9
+                                input.form-control(type='text', required='required', name='clazzName',id='clazzName', ng-model='field.class')
+                        .form-group
+                            .col-sm-3
+                            .col-sm-9
+                                button.btn.btn-cancel(id='cancelAddField',type='button',ng-click='reset()')
+                                    | Reset
+                                
+                                button.btn.btn-primary(id='addField',type='button',ng-click='addField()')
+                                    | Add field
+            .col-lg-1     
+            .col-lg-3
+                form.form-horizontal(action='/save', method='post',id='generatorForm')
+                    .form-group
+                        label(for='formName') Form name
+                        input.form-control(type='text', name='formName', id='formName', placeholder='Form name')
+                table.table.table-bordered.table-striped
+                    thead
+                        tr
+                            td Label
+                            td Name                    
+                            td Type
+                            td required
+                            td Class
+                            td Edit
+                            td Delete
+                            td Validation rules
+                                                                                
+                    tbody
+                        tr(ng-repeat='field in fields')
+                            td {{field.label}}
+                            td {{field.name}}
+                            td {{field.type}}
+                            td {{field.required}}
+                            td {{field.class}}
+                            td 
+                                button.btn.btn-info(type='button') Edit
+                            td
+                                button.btn.btn-danger(type='button') Delete
+                            td
+                                button.btn.btn-default(type='button') Validation
+            .col-lg-4

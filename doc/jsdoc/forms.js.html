@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>DocStrap Source: forms.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">DocStrap</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#Field">Field</a></li><li><a href="global.html#FieldSet">FieldSet</a></li><li><a href="global.html#Form">Form</a></li><li><a href="global.html#Rule">Rule</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+		<div class="col-sm-3 col-md-3">
+            <form class="navbar-form" role="search">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: forms.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">/**
+ * Array.prototype.remove - removes an/several element/elements from an array.
+ *
+ * @param  {integer} from   Index from which the removal starts.
+ * @param  {integer} to     Index until the removal ends.
+ * @return {Array}          returns the resulting array.
+ */
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from &lt; 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+
+
+/**
+ * Rule class construvtor, represents a ruke for
+ * validation of a value.
+ *
+ * @param  {String}     name                  name of the rule
+ * @param  {selector}   errorMessageContainer container DOM element that holds the corresponding error messages.
+ * @param  {String}     errorMessage          the error message, if this rule fails
+ * @param  {Function}   validationFunction    the function to validate the given value, that function should be globally defined.
+ * @property {String}   name                  name of the rule.
+ * @property {String}   errorMessageContainer jQuery selector ofthe error message container.
+ * @property {String}   errorMessage          Error message if an error occurs.
+ * @property {Object}   validationFunction    validation function.
+ */
+var Rule = function( name, errorMessageContainer, errorMessage, validationFunction) {
+
+    this.name = name;
+    this.errorMessageContainer = errorMessageContainer;
+    this.errorMessage = errorMessage;
+    this.validationFunction = validationFunction;
+    this.valid = false;
+};
+
+/**
+ * Rule.prototype.validate - validate a given value according to
+ * the validation function.
+ *
+ * @param  {Any}        value the value to be validated.
+ * @param  {Any}        args  additional arguments.
+ * @return {boolean}    returns true if the validation is successful otherwise false.
+ */
+Rule.prototype.validate = function(value, elememt, args) {
+    this.valid = this.validationFunction(value, element, args);
+    return this.valid;
+};
+
+
+
+/**
+ * Form class contructor, represents a form element width
+ * its fieldsets and fields as children elements.
+ *
+ * @param  {String} id      id of the form element
+ * @param  {String} method  the HTTP method (GET, POST, etc.)
+ * @param  {String} action  the action property, usually an URL
+ */
+var Form = function(id, method, action) {
+    this.fieldSets = [];
+    this.fieldSetMap = {};
+    this.fieldMap = {};
+    this.fields=[];
+    this.rules = [];
+    this.rulesMap ={};
+    this.id = id;
+    this.method=method;
+    this.action=action;
+};
+
+/**
+ * FieldSet class constructor
+ * @param {String} id  id of the fieldset element.
+ */
+var FieldSet = function(id) {
+    this.id = id;
+    this.fieldMap = {};
+    this.fields=[];
+    this.rules = [];
+    this.parent = null;
+};
+
+/**
+ * Field default constructor
+ * @param {String} id id of the field element of the form.
+ */
+var Field = function(id) {
+    this.id = id;
+    this.parent = null;
+    this.rules = [];
+};
+
+
+/**
+ * Form.prototype.addFieldSet - adds a fieldset to the form
+ *
+ * @param  {FiledSet} fieldSet FieldSet instance
+ * @return {Form}              returns the form object for chainability
+ */
+Form.prototype.addFieldSet = function(fieldSet) {
+    fieldSet.parent = this;
+    this.fieldMap[field.id]=field;
+    this.fields.push(field);
+    return this;
+};
+
+/**
+ * Form.prototype.getFieldSet - retrieves a FieldSet object by its id or its index
+ *
+ * @param  {Object}             Object key is either String or an Integer.
+ * @return {type}               FieldSet instance or null in case a matching
+ *                              Fieldset doesn't exist.
+ */
+Form.prototype.getFieldSet = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        return this.fieldSetMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.fieldSet.length &amp;&amp; key>=this.fieldSet.length) {
+        return this.fieldSet[key];
+    } else {
+        return null;
+    }
+};
+
+/**
+ * Form.prototype.removeFieldSet removes a FieldSet onbject from the given Form instance
+ * @param  {Object} Object key is either String or an Integer.
+ * @return {Form}   returns the form object for chainability
+ */
+Form.prototype.removeFieldSet = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        var item = null;
+        this.fieldSet.each(function(obj, index){
+            if(value.id==key) {
+                this.fieldSet.remove(index);
+            }
+        });
+        delete this.fieldSetMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.fieldSet.length &amp;&amp; key>=this.fieldSet.length) {
+        var prop = this.fieldSet[key].id;
+        this.fieldSet.remove(key);
+        delete this.fieldSetMap[prop];
+    }
+    return this;
+};
+
+
+/**
+ * Form.prototype.addField adds a field object directly to the form
+ * @param {Object} field Field object to add
+ */
+Form.prototype.addField = function(field) {
+    field.parent=this;
+    this.fieldMap[field.id]=field;
+    this.fields.push(field);
+};
+
+/**
+ * Form.prototype.getField retrieves a Field object from the form. The field in question
+ * has to directly added to the form before
+ * @param  {Object} key The key object is either a String in case of the retrieval by
+ *                      the field id, or it is am Integer.
+ * @return {Field}      returns the field object or null, if it is not found.
+ */
+Form.prototype.getField = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        return this.fieldMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.fields.length &amp;&amp; key>=this.fieldSet.length) {
+        return this.fields[key];
+    } else {
+        return null;
+    }
+};
+
+/**
+ * Form.prototype.removeField   removes a Field object from the given Form instance
+ * @param  {Object} Object key is either String or an Integer.
+ * @return {Form}    returns the form object for chainability
+ */
+Form.prototype.removeField = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        var item = null;
+        this.fields.each(function(obj, index){
+            if(value.id==key) {
+                this.fields.remove(index);
+            }
+        });
+        delete this.fieldMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.fields.length &amp;&amp; key>=this.fields.length) {
+        var prop = this.fields[key].id;
+        this.fields.remove(key);
+        delete this.fieldMap[prop];
+    }
+    return this;
+};
+
+/**
+ * Form.prototype.addRule adds a rule object to the Form instance.
+ * @param {Rule} rule Rule object instance to be added
+ */
+Form.prototype.addRule = function(rule) {
+    this.rulesMap[rule.name]=rule;
+    this.rules.push(rule);
+};
+
+/**
+ * Form.prototype.getRule retrieves a Rule object by its id or its index
+ * @param  {Object} key   Object key is either String or an Integer.
+ * @return {Rule}         returns the retrieved rule object or null,
+ *                        if the object cannot be retrieved.
+ */
+Form.prototype.getRule = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        return this.rulesMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.rules.length &amp;&amp; key>=this.rules.length) {
+        return this.rules[key];
+    } else {
+        return null;
+    }
+};
+
+/**
+ * Form.prototype.deleteRule removes a Rule object from the given Form instance
+ * @param  {Object} Object key is either String or an Integer.
+ * @return {Form}   returns the form object for chainability
+ */
+Form.prototype.deleteRule = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        var item = null;
+        this.rules.each(function(obj, index){
+            if(value.id==key) {
+                this.rules.remove(index);
+            }
+        });
+        delete this.rulesMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.rules.length &amp;&amp; key>=this.rules.length) {
+        var prop = this.rules[key].id;
+        this.rules.remove(key);
+        delete this.rulesMap[prop];
+    }
+    return this;
+};
+
+/**
+ * FieldSet.prototype.addField add a Field object t the FieldSet instance.
+ * @param {Field} field Field object to be added
+ * @return {FieldSet}   returns the fieldSet object for chainability
+ */
+FieldSet.prototype.addField = function(field) {
+    this.fieldMap[field.id]=field;
+    this.fields.push(field);
+    return this;
+};
+
+
+/**
+ * FieldSet.prototype.getField retrieves a Field object from the fieldet. The field in question
+ * has to directly added to the fieldSet before
+ * @param  {Object} key The key object is either a String in case of the retrieval by
+ *                      the field id, or it is am Integer.
+ * @return {FieldSet}      returns the fieldSet object or null, if it is not found.
+ */
+FieldSet.prototype.getField = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        return this.fieldMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.fields.length &amp;&amp; key>=this.fieldSet.length) {
+        return this.fields[key];
+    } else {
+        return null;
+    }
+};
+
+/**
+ * FieldSet.prototype.removeField   removes a Field object from the given FieldSet instance
+ * @param  {Object} Object key is either String or an Integer.
+ * @return {FieldSet}    returns the fieldSet object for chainability
+ */
+FieldSet.prototype.removeField = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        var item = null;
+        this.fields.each(function(obj, index){
+            if(value.id==key) {
+                this.fields.remove(index);
+            }
+        });
+        delete this.fieldMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.fields.length &amp;&amp; key>=this.fields.length) {
+        var prop = this.fields[key].id;
+        this.fields.remove(key);
+        delete this.fieldMap[prop];
+    }
+    return this;
+};
+
+
+
+/**
+ * FieldSet.prototype.addRule adds a rule object to the FieldSet instance.
+ * @param {Rule} rule Rule object instance to be added
+ * @return {FieldSet}              returns the fieldSet object for chainability
+ */
+FieldSet.prototype.addRule = function(rule) {
+    this.rulesMap[rule.name]=rule;
+    this.rules.push(rule);
+    return this;
+};
+
+/**
+ * FieldSet.prototype.getRule retrieves a Rule object by its id or its index
+ * @param  {Object} key   Object key is either String or an Integer.
+ * @return {Rule}         returns the retrieved rule object or null,
+ *                        if the object cannot be retrieved.
+ */
+FieldSet.prototype.getRule = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        return this.rulesMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.rules.length &amp;&amp; key>=this.rules.length) {
+        return this.rules[key];
+    } else {
+        return null;
+    }
+};
+
+/**
+ * FieldSet.prototype.deleteRule removes a Rule object from the given Form instance
+ * @param  {Object} Object key is either String or an Integer.
+ * @return {Form}   returns the fieldSet object for chainability
+ */
+FieldSet.prototype.deleteRule = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        var item = null;
+        this.rules.each(function(obj, index){
+            if(value.id==key) {
+                this.rules.remove(index);
+            }
+        });
+        delete this.rulesMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.rules.length &amp;&amp; key>=this.rules.length) {
+        var prop = this.rules[key].id;
+        this.rules.remove(key);
+        delete this.rulesMap[prop];
+    }
+    return this;
+};
+
+/**
+ * Field.prototype.addRule adds a rule object to the Field instance.
+ * @param {Rule} rule Rule object instance to be added
+ * @return {Field}   returns the field object for chainability
+ */
+Field.prototype.addRule = function(rule) {
+    this.rulesMap[rule.name]=rule;
+    this.rules.push(rule);
+};
+
+/**
+ * Field.prototype.getRule retrieves a Rule object by its id or its index
+ * @param  {Object} key   Object key is either String or an Integer.
+ * @return {Rule}         returns the retrieved rule object or null,
+ *                        if the object cannot be retrieved.
+ */
+Field.prototype.getRule = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        return this.rulesMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.rules.length &amp;&amp; key>=this.rules.length) {
+        return this.rules[key];
+    } else {
+        return null;
+    }
+};
+
+/**
+ * Field.prototype.deleteRule removes a Rule object from the given Field instance
+ * @param  {Object} Object key is either String or an Integer.
+ * @return {Field}   returns the field object for chainability
+ */
+Form.prototype.deleteRule = function(key) {
+    if(key!==null &amp;&amp; typeof(key)===String &amp;&amp; isNaN(key)) {
+        var item = null;
+        this.rules.each(function(obj, index){
+            if(value.id==key) {
+                this.rules.remove(index);
+            }
+        });
+        delete this.rulesMap[key];
+    } else if(typeof(key)===Number &amp;&amp; key&lt;this.rules.length &amp;&amp; key>=this.rules.length) {
+        var prop = this.rules[key].id;
+        this.rules.remove(key);
+        delete this.rulesMap[prop];
+    }
+    return this;
+};
+
+/**
+ * Form.prototype.validate Validates a form object.
+ * @param  {boolean} deep   If deep is true, all elements (fieldSets and
+ *                          fields are validated recursively too). otherwise only rules
+ *                          directly added to the Form instance are vaidated.
+ * @param  {boolean} lazy   If lazy is true, the validation stops at the first violation.
+ * @return {boolean}        true if all validations succeed, otherwise false.
+ */
+Form.prototype.validate = function(deep, lazy) {
+    var result = true, _lazy = lazy || false;
+    for(var i=0;i&lt;this.rules.length; i++) {
+        result = result &amp;&amp; this.rules[i].validate(null, this);
+        if (_lazy &amp;&amp; !result) return false;
+    }
+    if(deep===true) {
+        for(var j=0;j&lt;this.fieldSets.length;j++) {
+            result = result &amp;&amp; this.fieldSets[j].validate(null, this);
+            if (_lazy &amp;&amp; !result) return false;
+        }
+    }
+    return result;
+};
+
+
+
+/**
+ * FieldSet.prototype.validate Validates a fierldset object.
+ * @param  {boolean} deep   If deep is true, all elements (incl. all
+ *                          fields are validated recursively too). otherwise only rules
+ *                          directly added to the FieldSet instance are vaidated.
+ * @param  {boolean} lazy   If lazy is true, the validation stops at the first violation.
+ * @return {boolean}        true if all validations succeed, otherwise false.
+ */
+FieldSet.prototype.validate = function(deep, lazy) {
+    var result = true, _lazy = lazy || false;
+    for(var i=0;i&lt;this.rules.length; i++) {
+        result = result &amp;&amp; this.rules[i].validate(null, this);
+        if (_lazy &amp;&amp; !result) return false;
+    }
+    if(deep===true) {
+        for(var j=0;j&lt;this.fields.length;j++) {
+            result = result &amp;&amp; this.fields[j].validate(lazy);
+            if (_lazy &amp;&amp; !result) return false;
+        }
+    }
+    return result;
+};
+
+/**
+ * FieldSet.prototype.validate Validates a fierldset object.
+ * @param  {boolean} deep   If deep is true, all elements (incl. all
+ *                          fields are validated recursively too). otherwise only rules
+ *                          directly added to the FieldSet instance are vaidated.
+ * @param  {boolean} lazy   If lazy is true, the validation stops at the first violation.
+ * @return {boolean}        true if all validations succeed, otherwise false.
+ */
+Field.prototype.validate = function(lazy) {
+    var result = true, _lazy = lazy || false;
+    for(var i=0;i&lt;this.rules.length; i++) {
+        result = result &amp;&amp; this.rules[i].validate(this.value, this);
+        if (_lazy &amp;&amp; !result) return false;
+    }
+    return result;
+};
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+<div class="modal fade" id="searchResults">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Search results</h4>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+
+<footer>
+
+
+	<span class="copyright">
+	DocStrap Copyright © 2012-2015 The contributors to the JSDoc3 and DocStrap projects.
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
+	
+		on Wed Aug 17th 2016
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+<script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			var id = $( heading ).attr( "id" );
+			return id && id.replace(/\~/g, '-inner-').replace(/\./g, '-static-') || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		SearcherDisplay.init();
+	});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Form Assistant</title>
+        <link rel="stylesheet" href="/_common/css/styles.css">
+        <script src="/_common/js/vendor/jquery/dist/jquery.js">
+        </script>
+        <script src="/_common/js/vendor/jquery-ui/jquery-ui.js">
+        </script>
+        <script src="/_common/js/vendor/bootstrap.js">
+        </script>
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="row">
+                        <div class="col-lg-10 col-lg-offset-1">
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li role="presentation" class="active"><a href="#elements" role=
+                                "tab" data-toggle="tab">Elements</a></li>
+                                <li role="presentation"><a href="#inspector" role="tab"
+                                data-toggle="tab">Inspector</a></li>
+                                <li role="presentation"><a href="#layout" role="tab"
+                                data-toggle="tab">Layout</a></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div role="tabpanel" class="tab-pane active" id="elements">
+                                    <ul class="list-group">
+                                        <li class="list-group-item">
+                                            <div class="form-group draggable">
+                                                <input type="text" name="text-input" id="text-input" class="form-control">
+                                            </div>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <div class="form-group draggable">
+                                                <input type="checkbox" name="checkbox-input" id="checkbox-input" class="checkbox">
+                                            </div>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <div class="form-group draggable">
+                                                <label class="control-label">Label</label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div role="tabpanel" class="tab-pane active" id="inspector">
+                                    <div class="row">
+                                        <div class="col-lg-10 col-lg-offset-1">
+                                            <h2>Object inspecor : <span></span></h2>
+                                        </div>
+                                    </div>
+                                    <form class="form-horizontal">
+                                        <div class="form-group">
+                                            <div class="col-lg-4">
+                                                Name :
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <input type="text" name="curr-name" id="curr-name-id" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-lg-4">
+                                                ID :
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <input type="text" name="curr-id" id="curr-id-id" class="form-control">
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div role="tabpanel" class="tab-pane active" id="layout"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <form class="form-horizontal droppable sortable">
+                        <div class="form-group"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+        jQuery.extend({
+            stringify  : function stringify(obj) {
+                var t = typeof (obj);
+                if (t != "object" || obj === null) {
+                    // simple data type
+                    if (t == "string") obj = '"' + obj + '"';
+                    return String(obj);
+                } else {
+                    // recurse array or object
+                    var n, v, json = [], arr = (obj && obj.constructor == Array);
+
+                    for (n in obj) {
+                        v = obj[n];
+                        t = typeof(v);
+                        if (obj.hasOwnProperty(n)) {
+                            if (t == "string") v = '"' + v + '"'; else if (t == "object" && v !== null) v = jQuery.stringify(v);
+                            json.push((arr ? "" : '"' + n + '":') + String(v));
+                        }
+                    }
+                    return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
+                }
+            }
+        });
+
+        jQuery(document).ready(function($) {
+            $('.draggable').draggable({
+                helper : function() {
+                    var $this=$(this),w = $this.width(),h=$this.height();
+                    return $this.clone(true,true).css('zIndex',10000).css(
+                        {'width': w, 'height' : h +20,'backgroundColor':'yellow'});
+                },
+                containment: 'window',
+                cursor: 'grab',
+                snap : '.form-group'
+            });
+            $('.droppable .form-group').droppable( {
+                    drop: function(event, ui) {
+                        var draggable = ui.draggable;
+                        if (draggable.hasClass('form-group')===true) {
+                            var elem = $(this).append(draggable.children().clone(false,false).addClass('dropped'));
+                        } else {
+
+                        }
+
+
+                        $('.dropped').find('*').attr('contenteditable','true').addClass('contenteditable');
+
+                }
+            });
+            $('.sortable .form-group').sortable();
+        });
+        </script>
+    </body>
+</html>

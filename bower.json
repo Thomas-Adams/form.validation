@@ -1,0 +1,24 @@
+{
+  "name": "forms",
+  "description": "",
+  "main": "",
+  "authors": [
+    "Thomas Adams <heinrich.adams@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/_common/js/vendor/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "2.2.4",
+    "moment": "momentjs#^2.14.1",
+    "angular": "^1.5.8",
+    "jquery-ui": "^1.12.0"
+  }
+}

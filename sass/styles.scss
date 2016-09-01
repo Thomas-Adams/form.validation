@@ -1,0 +1,29 @@
+// Import Bootstrap Compass integration
+@import "bootstrap-compass";
+
+// Import custom Bootstrap variables
+@import "bootstrap-variables";
+
+// Import Bootstrap for Sass
+@import "bootstrap";
+
+
+.form-group {
+    min-height: 20px;
+}
+
+.draggable {
+    padding: 10px 10px 10px 10px;
+    cursor: grab;
+    border: 1px dashed #CCCCCC;
+}
+
+.droppable {
+    min-height: 100px;
+    padding: 10px 10px 10px 10px;
+    border: 1px dashed #CCCCCC;
+}
+
+.contenteditable {
+    cursor: text;
+};

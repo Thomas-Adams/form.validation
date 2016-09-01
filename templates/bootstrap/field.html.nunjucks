@@ -1,0 +1,7 @@
+<div class="{{row.class}}">
+    {% if field.closing %}
+        <{{field.tag}} type="{{ field.type }}" name="{{ field.name }}" id="{{ field.id }}" class="{{ field.class}}" {{ attributes | safe }}/>
+    {% else %}
+        <{{field.tag}} type="{{ field.type }}" name="{{ field.name }}" id="{{ field.id }}" class="{{ field.class}}" {{ attributes | safe }}></{{field.tag}}>
+    {% endif %}
+</div>
