@@ -14,10 +14,34 @@
         // the whole form or group validations
         'validateOnBlur' : true,
         // Wether hidden typed elements are validated
-        'validateHidden' : false
-    };
+        'validateHidden' : false,
+        //callback function gets executed once the validation is done successfully
+        'onValidateSuccessComplete' : null
+    }, defaultErrorMessages = {
+		
+		'required' : 'The field is required and cannot be empty.',
+		'pattern' : 'The field does not match the required pattern',
+		'select' : 'You have to select at least one option.',
+		'checked' : 'The field must checked.',
+		'minmaxLength' : 'The field must be at least {0} and at most {1} characters long.',
+		'minmax' : 'The value must be at least {0} and aat most {1}.',
+		'email' : 'The field must be a valid email.',
+		'datetime' : 'THe field must be a valid date/time.',
+		'number' : 'The field must be a valid number.',
+		'equalsTo' : 'The field must be equal to `{0}`.',
+		'dependsOn' : 'The field deponds on the following fields : `{0}`.',
+		'steps': 'The field does not match the required steps value of {0}.'
+	};
 
-
+	var getDefaultErrorMessages = function(rule, params) {
+		var s = defaultErrorMessages[rule];
+		if(params && params.length) {
+			for(var i=0; i<params.length; i++) {
+				s = s.replace('{' + i + '}',params[i]);
+			}
+		}
+		return s;
+	};
 
     //validation functions
 
@@ -96,7 +120,6 @@
                 ||( multiple===false && selectedCount===1)){
                 return true;
             }
-
             return false;
         }
     };
@@ -113,7 +136,7 @@
      * these attributes is missing either Number.MIN_VALU or Number.MAX_VALUE serves as
      * corresponding default.
      * Note that <code>data-validation-group-max</code> and <code>data-validation-group-min</code>
-     * should be added to each orm element beloging to that specific group and they should also be
+     * should be added to each form element beloging to that specific group and they should also be
      * of the same value each time.
      * The function returns a
      * //TODO: Example code
@@ -185,8 +208,9 @@
      * </table>
      */
     var validateElement = function( elem, options){
-        var $elem = $(elem),
+        var $elem = $(elem), validation=true;
             tagName = elem.tagName.toUpperCase(),
+            elemName= elem.getAttribute('name'),
             isRequired = elem.getAttribute('required') ? true : false,
             type = tagName ==='INPUT' ? elem.getAttribute('type').toLowerCase() : tagName.toLowerCase(),
             isButton = type=='submit' || type=='button' || type=='image' ? true : false,
@@ -217,7 +241,27 @@
             remoteAjaxUrl = elem.getAttribute('data-validation-remote-url'),
             remoteAjaxArgs = elem.getAttribute('data-validation-remote-args'),
             remoteAjaxType = elem.getAttribute('data-validation-remote-type'),
-            valid = true, notEmpty = validateNotBlank(value);
+            valid = true, notEmpty = validateNotBlank(value),
+            requiredErrorMessage = elem.getAttribute('data-required-msg') || defaultErrorMessages['required'],
+            patternErrorMessage = elem.getAttribute('data-pattern-msg') || defaultErrorMessages['pattern'],
+            selectErrorMessage = elem.getAttribute('data-select-msg') || defaultErrorMessages['select'],
+            checkedErrorMessage = elem.getAttribute('data-checked-msg') || defaultErrorMessages['checked'],
+            emailErrorMessage = elem.getAttribute('data-email-msg') || defaultErrorMessages['email'],
+            minmaxLengthErrorMessage = elem.getAttribute('data-minmaxlength-msg') || getDefaultErrorMessages('minmaxLength', [minlengthValue, maxlengthValue]),
+            datetimeErrorMessage = elem.getAttribute('data-datetime-msg') || defaultErrorMessages['datetime'],
+            numberErrorMessage = elem.getAttribute('data-number-msg') || defaultErrorMessages['number'],
+            minmaxErrorMessage = elem.getAttribute('data-minmax-msg') || getDefaultErrorMessages('minmax', [minValue, maxValue]),
+            equalsToErrorMessage = elem.getAttribute('data-equalsTo-msg') || getDefaultErrorMessages('equalsTo', [equalsTo]),
+            dependsOnErrorMessage = elem.getAttribute('data-depends-on-msg') || getDefaultErrorMessages('dependsOn', [dependsOn]),
+            stepsErrorMessage = elem.getAttribute('data-steps-msg') || getDefaultErrorMessages('steps', [stepValue]),
+            customErrorMessage = elem.getAttribute('data-custom-msg'),
+            remoteErrorMessage = elem.getAttribute('data-remote-msg'),
+            errors = { 'valid' : true, 'name': elemName,  messages: [], rules : []};
+            
+            
+            
+            
+            
 
         //either the field is not excluded and hidden and hidden fields are to be
         //validated or the field is not ecluded nor hidden nor is it a button
@@ -227,90 +271,184 @@
             if(customFunction){
                 //TODO: adapt the context, window to this or self or base.
                 if( customFunctionArguments) {
-                    valid = valid && window[customFunction](value, customFunctionArguments);
+                    valid = window[customFunction](value, customFunctionArguments);
                 } else {
-                    valid = valid && window[customFunction](value);
+                    valid = window[customFunction](value);
                 }
-            }
-            if(valid===false && this.lazyValidation) return valid;
+            }            
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(customErrorMessage);							
+			}
+			validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             // validate required
+            valid=true;
             if(isRequired) {
-                valid = valid && notEmpty;
+                valid = notEmpty;
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(requiredErrorMessage);							
+			}
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate select
+            valid=true;
             if(notEmpty && tagName === 'SELECT') {
-                valid = valid && validateSelect(value);
+                valid = validateSelect(value);
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(selectErrorMessage);							
+			}
+			
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate checkbox
+            valid=true;
             if(type=='checkbox') {
-                valid = valid && checked;
+                valid = checked;
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(checkedErrorMessage);							
+			}
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate email
+            valid=true;
             if(notEmpty && type === 'email') {
-                valid = valid && validateEmail(value);
+                valid = validateEmail(value);
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(emailErrorMessage);							
+			}
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate minlength and maxlength
-            if(notEmpty) {
-                valid = valid && validateLength(value,minLengthValue ,maxlengthValue);
+            valid=true;
+            if(notEmpty && (!isNaN(minlengthValue) || !isNaN(maxlengthValue))) {
+                valid = validateLength(value,minlengthValue ,maxlengthValue);
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(minmaxLengthErrorMessage);							
+			}
+            
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate pattern
+            valid=true;
             if(notEmpty && pattern) {
-                valid = valid && validatePattern(value, pattern, modifiers);
+                valid = validatePattern(value, pattern, modifiers);
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(patternErrorMessage);							
+			}            
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate date, dateime, datetime-local or time
+            valid=true;
             if(notEmpty && (type=='date' || type=='datetime' || type=='datetime-local' || type=='time')) {
                 if(format) {
-                    valid = valid && moment(value,format).isValid();
+                    valid = moment(value,format).isValid();
                 } else {
-                    valid = valid && moment(value).isValid();
+                    valid = moment(value).isValid();
                 }
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(datetimeErrorMessage);							
+			}            
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate number
+            valid=true;
             if(notEmpty && (type=='number')) {
-                valid = valid && !isNaN(parseFloat(value));
+                valid = !isNaN(parseFloat(value));
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(numberErrorMessage);							
+			}
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate min and max
+            valid=true;
             if(notEmpty && type=='number' && (min || max) ) {
-                valid = valid && validateRange(value, minValue, maxValue);
+                valid = validateRange(value, minValue, maxValue);
             }
-            if(valid===false && this.lazyValidation) return valid;
-            //validate checkbox
-            if(type=='checkbox') {
-                valid = valid && checked;
-            }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(minmaxErrorMessage);							
+			}
+			
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate data-equals
+            valid=true;
             if(equalsTo) {
-                valid = valid && (value == $(form).find(equalsTo).val());
+                valid = (value == $(form).find(equalsTo).val());
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(equalsToErrorMessage);							
+			}
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
             //validate steps
+            valid=true;
             if(!isNaN(stepValue)) {
-                valid = valid && (value % stepValue == 0);
+                valid = (value % stepValue == 0);
             }
-            if(valid===false && this.lazyValidation) return valid;
-
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(stepsErrorMessage);							
+			}
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
+			//validate depends on
+			valid=true;
             if(dependsOnElements.length>0) {
                 var v = true;
                 for(var i=0;i<dependsOnElements.length;i++) {
                     v = v && ( validateNotBlank($(dependsOnElements[i]).val())
                         || $(dependsOnElements[i]).prop('checked')==true
-                        || validateSelect($(dependsOnElements[i]).val());
+                        || validateSelect($(dependsOnElements[i]).val()));
                 }
-                valid = valid && v;
+                valid = v;
             }
-            if(valid===false && this.lazyValidation) return valid;
+            errors.valid=errors.valid && valid;			
+            if(valid===false) {
+				errors.messages.push(dependsOnErrorMessage);							
+			}            
+            validation=validation && valid;
+            if(validation===false && this.lazyValidation) return errors;
         }
-        return valid;
+        return errors;
     };
+    
+    
+    var hideErrors = function(element, options, errors) {
+		alert('hide errors of ' + element.getAttribute('name'));
+		var $el = $(element);
+		$el.closest('div.form-group').removeClass('has-error');
+		$el.closest('div.form-group').find('ul.error').empty();
+	};
+	
+	
+	var showErrors = function(element, options, errors) {
+		alert('show errors of ' + element.getAttribute('name'));
+		var $el = $(element);
+		$el.closest('div.form-group').addClass('has-error');
+		$el.closest('div.form-group').find('ul.error').empty();
+		for (var i=0;i<errors.messages.length;i++) {
+			$el.closest('div.form-group').find('ul.error').append('<li>' + errors.messages[i] +'</li>');
+		}
+	};
 
     var makeDirty = function(element, options) {
 
@@ -366,18 +504,54 @@
     };
 
     Plugin.prototype = {
+		
+		elements : [],
+		
+		errors : {},
 
         init : function(element, options ) {
-
-        }
+			var self = this;
+			if(this.options.validateOnBlur===true){	
+				var errors = {};				
+				$(':input',element).each(function(index, elem) {
+					$(elem).bind('blur', function(evt) {							
+						var result = validateElement(elem, options);
+						if(result.valid===true) {
+							hideErrors(elem, options,result);
+							delete errors[elem.getAttribute('name')];							
+						} else {
+							showErrors(elem,options,result);
+							self.errors[elem.getAttribute('name')]=result;
+						}
+					});
+				});
+			}			
+        },
+        
+        validate : function(options) {
+			var self = this;
+			self.errors = {};
+			$(':input', base.$el).each(function(index, elem) {
+				var result = validateElement(elem, options);
+				if(result.valid===true) {
+					hideErrors(elem, options,result);
+					delete self.errors[elem.getAttribute('name')];							
+				} else {
+					showErrors(elem,options,result);
+					self.errors[elem.getAttribute('name')]=result;
+				}
+			});	
+			
+			if($.isEmptyObject(self.errors)) {
+				if(self.options.onValidateSuccessComplete)
+					self.options.onValidateSuccessComplete();
+				else {
+					base.$el.submit();
+				}
+			}					
+		}
     };
 
-
-
-
-
-
-    };
 
     $.fn[pluginName] = function ( options ) {
         console.log(this);
